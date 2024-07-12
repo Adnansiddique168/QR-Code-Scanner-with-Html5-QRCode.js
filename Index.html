@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Code Scanner</title>
+</head>
+<body data-rsssl="1">
+
+<script src="./node_modules/html5-qrcode/html5-qrcode.min.js"></script>
+
+<style>
+main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  flex-direction: column;
+}
+#reader {
+  width: 600px;
+}
+#result {
+  text-align: center;
+  font-size: 1.5rem;
+}
+#error-message {
+  color: red;
+  text-align: center;
+  font-size: 1.2rem;
+  display: none;
+}
+</style>
+
+<main>
+    <div><h1>Scan Asset</h1></div>
+  <div id="reader"></div>
+  <div id="result"></div>
+  <div id="error-message">Camera access is required to scan QR codes. Please allow camera access and refresh the page.</div>
+</main>
+
+<script>
+  async function initScanner() {
+    try {
+      // Check for camera permissions
+      await navigator.mediaDevices.getUserMedia({ video: true });
+      console.log("Camera permission granted");
+
+      const html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        { facingMode: "environment" }, // cameraIdOrConfig
+        {
+          fps: 10,    // Optional, frame per seconds for qr code scanning
+          qrbox: 250  // Optional, if you want bounded box UI
+        },
+        qrCodeMessage => {
+          console.log(`QR Code detected: ${qrCodeMessage}`);
+          document.getElementById('result').innerHTML = `
+            <h2>Success!</h2>
+            <p><a href="${qrCodeMessage}" target="_blank">${qrCodeMessage}</a></p>
+          `;
+          html5QrCode.stop().then(ignore => {
+            // QR Code scanning is stopped.
+          }).catch(err => {
+            // Stop failed, handle it.
+          });
+        },
+        errorMessage => {
+          console.log(`QR Code no longer in front of camera: ${errorMessage}`);
+        }
+      ).catch(err => {
+        console.log(`Unable to start scanning, error: ${err}`);
+      });
+
+    } catch (err) {
+      console.error("Camera permission error:", err);
+      document.getElementById('error-message').style.display = 'block';
+    }
+  }
+
+  initScanner();
+</script>
+
+</body>
+</html>
